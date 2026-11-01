@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Transposable Piano</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="controls">
+        <div class="transpose-controls">
+          <button id="transpose-down" class="arrow" aria-label="Transpose down">
+            ◀
+          </button>
+          <div class="transpose-display">
+            <span>Transpose:</span>
+            <strong id="transpose-value">0</strong>
+            <span>semitones</span>
+          </div>
+          <button id="transpose-up" class="arrow" aria-label="Transpose up">
+            ▶
+          </button>
+        </div>
+        <div class="key-signature" aria-label="Key signature">
+          <span class="key-label">Key Signature</span>
+          <span class="clef" aria-hidden="true">𝄞</span>
+          <span id="key-signature-value" class="key-value">C</span>
+          <span id="key-signature-accidentals" class="key-accidentals">
+            no sharps/flats
+          </span>
+        </div>
+      </header>
+
+      <section
+        class="keyboard"
+        id="keyboard"
+        aria-label="Piano keyboard"
+      ></section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
