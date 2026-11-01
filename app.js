@@ -71,7 +71,7 @@ const playNote = (midi) => {
   const osc = audioContext.createOscillator();
   const gain = audioContext.createGain();
   const now = audioContext.currentTime;
-  const duration = 0.8;
+  const duration = 1.5;
 
   osc.type = "sine";
   osc.frequency.value = frequencyFromMidi(midi);
