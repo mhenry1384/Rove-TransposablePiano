@@ -1,5 +1,5 @@
 // Bump CACHE_VERSION whenever app files change so clients pick up the update.
-const CACHE_VERSION = "piano-v1";
+const CACHE_VERSION = "piano-v2";
 const ASSETS = [
   "./",
   "index.html",

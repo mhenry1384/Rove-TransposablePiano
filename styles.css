@@ -139,8 +139,12 @@ body {
 .key {
   position: relative;
   display: flex;
-  align-items: flex-end;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  padding-left: 0;
+  padding-right: 0;
   padding-bottom: 0.75rem;
   border-radius: 0 0 10px 10px;
   font-size: 0.8rem;
@@ -169,6 +173,48 @@ body {
   border-radius: 0 0 8px 8px;
   z-index: 3;
   top: 1rem;
+}
+
+.solfege {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.15;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  color: #0369a1;
+  pointer-events: none;
+}
+
+.key.black .solfege {
+  color: var(--accent);
+  font-size: 0.72rem;
+}
+
+.note-name {
+  pointer-events: none;
+}
+
+.keyboard.show-solfege .solfege {
+  display: flex;
+}
+
+.solfege-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.95rem;
+  letter-spacing: 0.03em;
+}
+
+.solfege-toggle input {
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: var(--accent);
+  cursor: pointer;
 }
 
 .key.active {

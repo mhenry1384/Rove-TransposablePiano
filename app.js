@@ -7,6 +7,8 @@ const keySignatureAccidentals = document.getElementById(
   "key-signature-accidentals",
 );
 
+const solfegeToggle = document.getElementById("solfege-toggle");
+
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
 const semitoneNames = [
@@ -30,6 +32,24 @@ const blackKeyMap = [
   { note: "F#", position: 4 },
   { note: "G#", position: 5 },
   { note: "A#", position: 6 },
+];
+
+// Movable-do solfège, indexed by semitone above the tonic. The physical C key
+// is always the tonic of the current key, so labels stay fixed to the keys.
+// Black keys show the raised (sharp) and lowered (flat) syllables.
+const solfegeNames = [
+  "Do",
+  "Di/Ra",
+  "Re",
+  "Ri/Me",
+  "Mi",
+  "Fa",
+  "Fi/Se",
+  "Sol",
+  "Si/Le",
+  "La",
+  "Li/Te",
+  "Ti",
 ];
 
 let transpose = 0;
@@ -101,9 +121,23 @@ const updateKeySignature = () => {
 const updateKeyLabels = () => {
   const keys = keyboard.querySelectorAll(".key");
   keys.forEach((key) => {
-    const midi = Number(key.dataset.midi) + transpose;
-    key.textContent = noteLabelFromMidi(midi);
+    const physicalMidi = Number(key.dataset.midi);
+    key.querySelector(".note-name").textContent = noteLabelFromMidi(
+      physicalMidi + transpose,
+    );
+    const degree = ((physicalMidi % 12) + 12) % 12;
+    key.querySelector(".solfege").innerHTML = solfegeNames[degree]
+      .split("/")
+      .map((s) => `<span>${s}</span>`)
+      .join("");
   });
+};
+
+const updateSolfegeVisibility = () => {
+  keyboard.classList.toggle("show-solfege", solfegeToggle.checked);
+  try {
+    localStorage.setItem("showSolfege", solfegeToggle.checked ? "1" : "0");
+  } catch {}
 };
 
 const handleKeyPress = (key) => {
@@ -128,7 +162,12 @@ const createKey = ({ note, octave, isBlack, position }) => {
   key.type = "button";
   key.className = `key ${isBlack ? "black" : "white"}`;
   key.dataset.midi = midiFromNote(note, octave);
-  key.textContent = noteLabelFromMidi(Number(key.dataset.midi));
+
+  const solfege = document.createElement("span");
+  solfege.className = "solfege";
+  const noteName = document.createElement("span");
+  noteName.className = "note-name";
+  key.append(solfege, noteName);
 
   if (isBlack) {
     key.classList.add(`black-pos-${position}`);
@@ -182,6 +221,13 @@ transposeUp.addEventListener("click", () => {
   updateKeySignature();
 });
 
+solfegeToggle.addEventListener("change", updateSolfegeVisibility);
+
+try {
+  solfegeToggle.checked = localStorage.getItem("showSolfege") === "1";
+} catch {}
+
 updateTransposeDisplay();
 renderKeyboard();
+updateSolfegeVisibility();
 updateKeySignature();
