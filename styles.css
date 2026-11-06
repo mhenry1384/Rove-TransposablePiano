@@ -236,6 +236,13 @@ body {
 .black-pos-5 { left: 68%; }
 .black-pos-6 { left: 82%; }
 
+.version {
+  text-align: left;
+  font-size: 0.8rem;
+  opacity: 0.55;
+  letter-spacing: 0.04em;
+}
+
 @media (max-width: 900px) {
   .octave {
     grid-auto-rows: 170px;

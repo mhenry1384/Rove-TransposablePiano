@@ -227,6 +227,8 @@ try {
   solfegeToggle.checked = localStorage.getItem("showSolfege") === "1";
 } catch {}
 
+document.getElementById("app-version").textContent = APP_VERSION;
+
 updateTransposeDisplay();
 renderKeyboard();
 updateSolfegeVisibility();

@@ -1,10 +1,12 @@
-// Bump CACHE_VERSION whenever app files change so clients pick up the update.
-const CACHE_VERSION = "piano-v3";
+// The version lives in version.js; bump it there whenever app files change.
+importScripts("version.js");
+const CACHE_VERSION = `piano-v${APP_VERSION}`;
 const ASSETS = [
   "./",
   "index.html",
   "styles.css",
   "app.js",
+  "version.js",
   "favicon.svg",
   "manifest.webmanifest",
   "icons/icon.svg",
@@ -33,10 +35,12 @@ self.addEventListener("activate", (event) => {
 });
 
 // Network-first so updates show up when online; fall back to cache offline.
+// "no-cache" revalidates with the server instead of trusting the browser's HTTP
+// cache, which GitHub Pages lets hold files for 10 minutes.
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   event.respondWith(
-    fetch(event.request)
+    fetch(event.request, { cache: "no-cache" })
       .then((response) => {
         if (response.ok && new URL(event.request.url).origin === location.origin) {
           const copy = response.clone();

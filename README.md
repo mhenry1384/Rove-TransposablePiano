@@ -24,7 +24,7 @@ No dependencies or build tools are required.
 
 Installation needs the files served over HTTPS (or `http://localhost`), not opened from disk. For a quick local test, run `python -m http.server` in this folder and visit `http://localhost:8000`. Then use your browser's **Install** option (the install icon in the address bar on desktop Chrome/Edge, or **Add to Home Screen** on mobile).
 
-When you change app files, bump `CACHE_VERSION` in `sw.js` so installed copies pick up the update.
+When you change app files, bump `APP_VERSION` in `version.js` so installed copies pick up the update.
 
 Your browser may require a user interaction before it allows audio playback. Click a key to enable audio.
 
@@ -33,6 +33,7 @@ Your browser may require a user interaction before it allows audio playback. Cli
 - `index.html` — Page structure and controls
 - `styles.css` — Keyboard styling and responsive layout
 - `app.js` — Keyboard rendering, transposition, key signatures, and audio
+- `version.js` — App version shown in the footer and used for the offline cache name
 - `manifest.webmanifest`, `sw.js`, `icons/` — App install metadata, offline service worker, and app icons
 
 ## Built with
