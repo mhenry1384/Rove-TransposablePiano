@@ -152,6 +152,10 @@ body {
   text-transform: uppercase;
   cursor: pointer;
   user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
   transition: transform 0.08s ease, box-shadow 0.08s ease;
 }
 
