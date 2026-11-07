@@ -1,6 +1,7 @@
 const keyboard = document.getElementById("keyboard");
 const transposeDown = document.getElementById("transpose-down");
 const transposeUp = document.getElementById("transpose-up");
+const transposeReset = document.getElementById("transpose-reset");
 const transposeValue = document.getElementById("transpose-value");
 const keySignatureValue = document.getElementById("key-signature-value");
 const keySignatureAccidentals = document.getElementById(
@@ -51,7 +52,7 @@ const solfegeNames = [
 ];
 
 let transpose = 0;
-const transposeLimit = 24;
+const transposeLimit = 11;
 const middleCMidi = 60;
 
 const keySignatures = [
@@ -148,12 +149,13 @@ const handleKeyPress = (key) => {
   key.addEventListener("pointercancel", release);
 };
 
-// The full range is six octaves (C1-B6). The main keyboard shows a window of
-// it in one row; the overview strip below shows all six octaves and a
+// The full range is four octaves (C3-B6). The main keyboard shows a window of
+// it in one row; the overview strip below shows the whole range and a
 // draggable highlight marking the window.
-const firstOctave = 1;
-const octaveCount = 6;
+const firstOctave = 3;
+const octaveCount = 4;
 const totalWhite = octaveCount * 7;
+document.documentElement.style.setProperty("--total-white", totalWhite);
 const blackAfterWhite = { "C#": 0, "D#": 1, "F#": 3, "G#": 4, "A#": 5 };
 
 const overview = document.getElementById("overview");
@@ -244,7 +246,10 @@ const setWindowStart = (start, { snap = true } = {}) => {
   applyWindow();
   if (snap) {
     try {
-      localStorage.setItem("windowStart", String(windowStart));
+      localStorage.setItem(
+        "windowStartNote",
+        String(windowStart + firstOctave * 7),
+      );
     } catch {}
   }
 };
@@ -293,14 +298,23 @@ overview.addEventListener("pointercancel", endDrag);
 window.addEventListener("resize", updateVisibleWhite);
 
 try {
-  const saved = Number(localStorage.getItem("windowStart"));
-  if (localStorage.getItem("windowStart") !== null && Number.isFinite(saved)) {
-    windowStart = saved;
+  // Stored as a white-key index counted from C0, so it survives range changes.
+  const stored = localStorage.getItem("windowStartNote");
+  const saved = Number(stored);
+  if (stored !== null && Number.isFinite(saved)) {
+    windowStart = saved - firstOctave * 7;
   }
 } catch {}
 
 transposeDown.addEventListener("click", () => {
   transpose = Math.max(-transposeLimit, transpose - 1);
+  updateTransposeDisplay();
+  updateKeyLabels();
+  updateKeySignature();
+});
+
+transposeReset.addEventListener("click", () => {
+  transpose = 0;
   updateTransposeDisplay();
   updateKeyLabels();
   updateKeySignature();

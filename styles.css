@@ -8,6 +8,8 @@
   --black-key-border: #0b1220;
   --accent: #38bdf8;
   --text: #e2e8f0;
+  /* Number of white keys in the full range; app.js sets the real value. */
+  --total-white: 28;
 }
 
 * {
@@ -69,6 +71,23 @@ body {
   transform: translateY(-2px);
 }
 
+.reset {
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.reset:hover {
+  background: #1f2937;
+}
+
 .transpose-display {
   text-align: center;
   font-size: 1rem;
@@ -118,7 +137,7 @@ body {
 .keyboard {
   --visible: 14;
   --key-height: 200px;
-  --black-width: calc(100% / 42 * 0.6);
+  --black-width: calc(100% / var(--total-white) * 0.6);
   overflow: hidden;
   background: rgba(15, 23, 42, 0.4);
   border-radius: 18px;
@@ -126,12 +145,12 @@ body {
   box-shadow: 0 20px 40px rgba(15, 23, 42, 0.45);
 }
 
-/* All six octaves in one row, wide enough that --visible white keys fill the
+/* The full range in one row, wide enough that --visible white keys fill the
    keyboard; it slides sideways to show the selected window. */
 .keyboard-strip {
   position: relative;
   display: flex;
-  width: calc(100% * 42 / var(--visible));
+  width: calc(100% * var(--total-white) / var(--visible));
   height: var(--key-height);
   transition: transform 0.15s ease;
 }
@@ -164,7 +183,7 @@ body {
 }
 
 .key.white {
-  flex: 0 0 calc(100% / 42);
+  flex: 0 0 calc(100% / var(--total-white));
   background: var(--white-key);
   border: 1px solid var(--white-key-border);
   color: #0f172a;
@@ -237,7 +256,7 @@ body {
 }
 
 .mini-key.white {
-  flex: 0 0 calc(100% / 42);
+  flex: 0 0 calc(100% / var(--total-white));
   background: var(--white-key);
   border-right: 1px solid #94a3b8;
   display: flex;
@@ -249,7 +268,7 @@ body {
 }
 
 .mini-key.black {
-  --black-width: calc(100% / 42 * 0.6);
+  --black-width: calc(100% / var(--total-white) * 0.6);
   position: absolute;
   top: 0;
   width: var(--black-width);
