@@ -30,10 +30,6 @@
             ▶
           </button>
         </div>
-        <label class="solfege-toggle">
-          <input type="checkbox" id="solfege-toggle" />
-          <span>Solfège</span>
-        </label>
         <div class="key-signature" aria-label="Key signature">
           <span class="key-label">Key Signature</span>
           <span class="clef" aria-hidden="true">𝄞</span>
@@ -49,6 +45,16 @@
         id="keyboard"
         aria-label="Piano keyboard"
       ></section>
+
+      <div
+        class="overview"
+        id="overview"
+        role="slider"
+        aria-label="Drag to choose which keys the keyboard shows"
+      >
+        <div class="overview-keys" id="overview-keys"></div>
+        <div class="overview-window" id="overview-window"></div>
+      </div>
 
       <footer class="version">Version <span id="app-version"></span></footer>
     </main>

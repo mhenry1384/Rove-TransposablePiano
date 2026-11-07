@@ -7,8 +7,6 @@ const keySignatureAccidentals = document.getElementById(
   "key-signature-accidentals",
 );
 
-const solfegeToggle = document.getElementById("solfege-toggle");
-
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
 const semitoneNames = [
@@ -133,13 +131,6 @@ const updateKeyLabels = () => {
   });
 };
 
-const updateSolfegeVisibility = () => {
-  keyboard.classList.toggle("show-solfege", solfegeToggle.checked);
-  try {
-    localStorage.setItem("showSolfege", solfegeToggle.checked ? "1" : "0");
-  } catch {}
-};
-
 const handleKeyPress = (key) => {
   const midi = Number(key.dataset.midi) + transpose;
   playNote(midi);
@@ -157,7 +148,47 @@ const handleKeyPress = (key) => {
   key.addEventListener("pointercancel", release);
 };
 
-const createKey = ({ note, octave, isBlack, position }) => {
+// The full range is six octaves (C1-B6). The main keyboard shows a window of
+// it in one row; the overview strip below shows all six octaves and a
+// draggable highlight marking the window.
+const firstOctave = 1;
+const octaveCount = 6;
+const totalWhite = octaveCount * 7;
+const blackAfterWhite = { "C#": 0, "D#": 1, "F#": 3, "G#": 4, "A#": 5 };
+
+const overview = document.getElementById("overview");
+const overviewKeys = document.getElementById("overview-keys");
+const overviewWindow = document.getElementById("overview-window");
+const keyboardStrip = document.createElement("div");
+keyboardStrip.className = "keyboard-strip";
+keyboard.appendChild(keyboardStrip);
+
+let visibleWhite = 14;
+// Index of the leftmost visible white key. Fractional while dragging.
+let windowStart = (4 - firstOctave) * 7;
+
+const forEachKey = (callback) => {
+  for (let o = 0; o < octaveCount; o++) {
+    const octave = firstOctave + o;
+    whiteKeys.forEach((note, i) =>
+      callback({ note, octave, isBlack: false, whiteIndex: o * 7 + i }),
+    );
+    blackKeyMap.forEach(({ note }) =>
+      callback({
+        note,
+        octave,
+        isBlack: true,
+        whiteIndex: o * 7 + blackAfterWhite[note],
+      }),
+    );
+  }
+};
+
+// Black keys sit centered on the boundary after their white key.
+const blackLeft = (whiteIndex) =>
+  `calc(${((whiteIndex + 1) / totalWhite) * 100}% - var(--black-width) / 2)`;
+
+const createKey = ({ note, octave, isBlack, whiteIndex }) => {
   const key = document.createElement("button");
   key.type = "button";
   key.className = `key ${isBlack ? "black" : "white"}`;
@@ -170,42 +201,103 @@ const createKey = ({ note, octave, isBlack, position }) => {
   key.append(solfege, noteName);
 
   if (isBlack) {
-    key.classList.add(`black-pos-${position}`);
+    key.style.left = blackLeft(whiteIndex);
   }
 
   key.addEventListener("pointerdown", () => handleKeyPress(key));
   return key;
 };
 
-const createOctave = (octaveNumber) => {
-  const octave = document.createElement("div");
-  octave.className = "octave";
-
-  whiteKeys.forEach((note) => {
-    octave.appendChild(
-      createKey({ note, octave: octaveNumber, isBlack: false }),
-    );
-  });
-
-  blackKeyMap.forEach(({ note, position }) => {
-    octave.appendChild(
-      createKey({ note, octave: octaveNumber, isBlack: true, position }),
-    );
-  });
-
-  return octave;
+const createOverviewKey = ({ note, octave, isBlack, whiteIndex }) => {
+  const key = document.createElement("div");
+  key.className = `mini-key ${isBlack ? "black" : "white"}`;
+  if (isBlack) {
+    key.style.left = blackLeft(whiteIndex);
+  } else if (note === "C") {
+    key.textContent = `C${octave}`;
+  }
+  return key;
 };
 
 const renderKeyboard = () => {
-  keyboard.innerHTML = "";
-  const octaves = [4, 5];
-
-  octaves.forEach((octaveNumber) =>
-    keyboard.appendChild(createOctave(octaveNumber)),
-  );
-
+  keyboardStrip.innerHTML = "";
+  overviewKeys.innerHTML = "";
+  forEachKey((spec) => {
+    keyboardStrip.appendChild(createKey(spec));
+    overviewKeys.appendChild(createOverviewKey(spec));
+  });
   updateKeyLabels();
 };
+
+const clampStart = (start) =>
+  Math.min(Math.max(start, 0), totalWhite - visibleWhite);
+
+const applyWindow = () => {
+  keyboard.style.setProperty("--visible", visibleWhite);
+  keyboardStrip.style.transform = `translateX(${(-windowStart / totalWhite) * 100}%)`;
+  overviewWindow.style.left = `${(windowStart / totalWhite) * 100}%`;
+  overviewWindow.style.width = `${(visibleWhite / totalWhite) * 100}%`;
+};
+
+const setWindowStart = (start, { snap = true } = {}) => {
+  windowStart = clampStart(snap ? Math.round(start) : start);
+  applyWindow();
+  if (snap) {
+    try {
+      localStorage.setItem("windowStart", String(windowStart));
+    } catch {}
+  }
+};
+
+// Show as many white keys as fit comfortably, up to two octaves.
+const updateVisibleWhite = () => {
+  const width = keyboard.clientWidth || window.innerWidth;
+  visibleWhite = Math.min(14, Math.max(7, Math.floor(width / 48)));
+  setWindowStart(windowStart);
+};
+
+// Dragging the overview: grabbing the highlight moves it by the drag
+// distance; pressing elsewhere centers the highlight there first.
+let dragOffset = null;
+
+const whiteUnitsAt = (clientX) => {
+  const rect = overview.getBoundingClientRect();
+  return ((clientX - rect.left) / rect.width) * totalWhite;
+};
+
+overview.addEventListener("pointerdown", (event) => {
+  const units = whiteUnitsAt(event.clientX);
+  const insideWindow =
+    units >= windowStart && units <= windowStart + visibleWhite;
+  dragOffset = insideWindow ? units - windowStart : visibleWhite / 2;
+  overview.setPointerCapture(event.pointerId);
+  document.body.classList.add("dragging");
+  setWindowStart(units - dragOffset, { snap: false });
+});
+
+overview.addEventListener("pointermove", (event) => {
+  if (dragOffset === null) return;
+  setWindowStart(whiteUnitsAt(event.clientX) - dragOffset, { snap: false });
+});
+
+const endDrag = () => {
+  if (dragOffset === null) return;
+  dragOffset = null;
+  document.body.classList.remove("dragging");
+  setWindowStart(windowStart);
+};
+
+overview.addEventListener("pointerup", endDrag);
+overview.addEventListener("pointercancel", endDrag);
+
+window.addEventListener("resize", updateVisibleWhite);
+
+try {
+  const saved = Number(localStorage.getItem("windowStart"));
+  if (localStorage.getItem("windowStart") !== null && Number.isFinite(saved)) {
+    windowStart = saved;
+  }
+} catch {}
 
 transposeDown.addEventListener("click", () => {
   transpose = Math.max(-transposeLimit, transpose - 1);
@@ -221,15 +313,14 @@ transposeUp.addEventListener("click", () => {
   updateKeySignature();
 });
 
-solfegeToggle.addEventListener("change", updateSolfegeVisibility);
-
-try {
-  solfegeToggle.checked = localStorage.getItem("showSolfege") === "1";
-} catch {}
-
 document.getElementById("app-version").textContent = APP_VERSION;
 
 updateTransposeDisplay();
 renderKeyboard();
-updateSolfegeVisibility();
+// Place the initial window without the slide animation.
+document.body.classList.add("dragging");
+updateVisibleWhite();
+requestAnimationFrame(() =>
+  requestAnimationFrame(() => document.body.classList.remove("dragging")),
+);
 updateKeySignature();

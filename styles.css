@@ -116,24 +116,28 @@ body {
 }
 
 .keyboard {
-  display: flex;
-  flex-wrap: wrap;
-  column-gap: 0;
-  row-gap: 1.2rem;
-  justify-content: center;
-}
-
-.octave {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(7, minmax(40px, 1fr));
-  grid-auto-rows: 200px;
-  gap: 0;
-  width: min(560px, 100%);
+  --visible: 14;
+  --key-height: 200px;
+  --black-width: calc(100% / 42 * 0.6);
+  overflow: hidden;
   background: rgba(15, 23, 42, 0.4);
   border-radius: 18px;
   padding: 1rem 0 1.2rem;
   box-shadow: 0 20px 40px rgba(15, 23, 42, 0.45);
+}
+
+/* All six octaves in one row, wide enough that --visible white keys fill the
+   keyboard; it slides sideways to show the selected window. */
+.keyboard-strip {
+  position: relative;
+  display: flex;
+  width: calc(100% * 42 / var(--visible));
+  height: var(--key-height);
+  transition: transform 0.15s ease;
+}
+
+.dragging .keyboard-strip {
+  transition: none;
 }
 
 .key {
@@ -160,27 +164,28 @@ body {
 }
 
 .key.white {
+  flex: 0 0 calc(100% / 42);
   background: var(--white-key);
   border: 1px solid var(--white-key-border);
   color: #0f172a;
-  height: 200px;
+  height: 100%;
   z-index: 1;
 }
 
 .key.black {
   position: absolute;
-  width: 9%;
-  height: 120px;
+  width: var(--black-width);
+  height: 60%;
   background: var(--black-key);
   border: 1px solid var(--black-key-border);
   color: #f8fafc;
   border-radius: 0 0 8px 8px;
   z-index: 3;
-  top: 1rem;
+  top: 0;
 }
 
 .solfege {
-  display: none;
+  display: flex;
   flex-direction: column;
   align-items: center;
   line-height: 1.15;
@@ -200,27 +205,6 @@ body {
   pointer-events: none;
 }
 
-.keyboard.show-solfege .solfege {
-  display: flex;
-}
-
-.solfege-toggle {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  cursor: pointer;
-  user-select: none;
-  font-size: 0.95rem;
-  letter-spacing: 0.03em;
-}
-
-.solfege-toggle input {
-  width: 1.15rem;
-  height: 1.15rem;
-  accent-color: var(--accent);
-  cursor: pointer;
-}
-
 .key.active {
   transform: translateY(2px);
   box-shadow: inset 0 0 15px rgba(56, 189, 248, 0.5);
@@ -230,11 +214,65 @@ body {
   box-shadow: inset 0 0 18px rgba(56, 189, 248, 0.6);
 }
 
-.black-pos-1 { left: 11%; }
-.black-pos-2 { left: 25%; }
-.black-pos-4 { left: 54%; }
-.black-pos-5 { left: 68%; }
-.black-pos-6 { left: 82%; }
+.overview {
+  position: relative;
+  height: 56px;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.dragging .overview {
+  cursor: grabbing;
+}
+
+.overview-keys {
+  position: relative;
+  display: flex;
+  height: 100%;
+  border-radius: 6px;
+  overflow: hidden;
+  opacity: 0.7;
+}
+
+.mini-key.white {
+  flex: 0 0 calc(100% / 42);
+  background: var(--white-key);
+  border-right: 1px solid #94a3b8;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  font-size: 0.55rem;
+  color: #475569;
+  padding-bottom: 2px;
+}
+
+.mini-key.black {
+  --black-width: calc(100% / 42 * 0.6);
+  position: absolute;
+  top: 0;
+  width: var(--black-width);
+  height: 60%;
+  background: var(--black-key);
+  border-radius: 0 0 2px 2px;
+}
+
+.overview-window {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  border: 3px solid var(--accent);
+  border-radius: 8px;
+  background: rgba(56, 189, 248, 0.25);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
+  pointer-events: none;
+  transition: left 0.15s ease;
+}
+
+.dragging .overview-window {
+  transition: none;
+}
 
 .version {
   text-align: left;
@@ -244,16 +282,8 @@ body {
 }
 
 @media (max-width: 900px) {
-  .octave {
-    grid-auto-rows: 170px;
-  }
-
-  .key.white {
-    height: 170px;
-  }
-
-  .key.black {
-    height: 105px;
+  .keyboard {
+    --key-height: 170px;
   }
 }
 
@@ -267,13 +297,5 @@ body {
   .key-signature {
     margin-left: 0;
     justify-content: center;
-  }
-
-  .keyboard {
-    row-gap: 1rem;
-  }
-
-  .octave {
-    width: 100%;
   }
 }

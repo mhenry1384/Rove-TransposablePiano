@@ -4,7 +4,7 @@ A lightweight, browser-based piano keyboard with adjustable pitch transposition.
 
 ## Features
 
-- Two-octave virtual piano keyboard
+- One-row piano keyboard with a six-octave overview strip; drag the highlight to slide the keyboard
 - Play notes with a mouse, touch screen, or other pointer input
 - Transpose notes up or down by up to 24 semitones
 - View the transposition amount and corresponding key signature
