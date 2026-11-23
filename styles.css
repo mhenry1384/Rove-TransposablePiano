@@ -318,3 +318,18 @@ body {
     justify-content: center;
   }
 }
+
+/* Phones in landscape: drop the space around the controls bar so the whole
+   app fits on screen without scrolling. */
+@media (orientation: landscape) and (max-height: 600px) {
+  body {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .controls {
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+    margin-bottom: -1.5rem;
+  }
+}

@@ -82,28 +82,114 @@ const noteLabelFromMidi = (midi) => {
   return semitoneNames[index].replace("#", "♯");
 };
 
+// Piano-like synthesis. Each note is a set of sine partials tuned slightly
+// sharp of the pure harmonics (string stiffness), each with a sharp attack
+// and its own decay: upper partials die away faster, so the tone starts
+// bright and mellows. A short filtered noise burst stands in for the hammer
+// thump. Releasing the key damps the note, like a piano's dampers.
+const master = audioContext.createGain();
+master.gain.value = 0.5;
+const compressor = audioContext.createDynamicsCompressor();
+compressor.threshold.value = -14;
+compressor.ratio.value = 4;
+master.connect(compressor);
+compressor.connect(audioContext.destination);
+
+// Relative strength of harmonics 1..10. The dip at 7 mimics a hammer striking
+// the string about 1/7 of the way along its length.
+const partialLevels = [1, 0.6, 0.4, 0.28, 0.2, 0.14, 0.04, 0.07, 0.045, 0.03];
+const inharmonicity = 0.0004;
+
+let noiseBuffer = null;
+const getNoiseBuffer = () => {
+  if (!noiseBuffer) {
+    const length = Math.floor(audioContext.sampleRate * 0.05);
+    noiseBuffer = audioContext.createBuffer(1, length, audioContext.sampleRate);
+    const data = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < length; i++) data[i] = Math.random() * 2 - 1;
+  }
+  return noiseBuffer;
+};
+
 const playNote = (midi) => {
   if (audioContext.state === "suspended") {
     audioContext.resume();
   }
 
-  const osc = audioContext.createOscillator();
-  const gain = audioContext.createGain();
   const now = audioContext.currentTime;
-  const duration = 1.5;
+  const frequency = frequencyFromMidi(midi);
+  // Low notes ring for several seconds, high notes for about one.
+  const sustain = Math.max(0.8, 4 * Math.pow(2, -(midi - 48) / 18));
+  const maxDuration = sustain * 4;
 
-  osc.type = "sine";
-  osc.frequency.value = frequencyFromMidi(midi);
+  const noteGain = audioContext.createGain();
+  noteGain.gain.value = 1;
+  noteGain.connect(master);
 
-  gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.exponentialRampToValueAtTime(0.6, now + 0.02);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+  const oscillators = [];
+  partialLevels.forEach((level, i) => {
+    const n = i + 1;
+    const partialFreq = frequency * n * Math.sqrt(1 + inharmonicity * n * n);
+    if (partialFreq > 12000) return;
+    // Treble notes have weaker upper partials.
+    const amplitude = 0.25 * level * Math.exp(-partialFreq / 6000);
+    const decay = sustain / (1 + 0.6 * i);
 
-  osc.connect(gain);
-  gain.connect(audioContext.destination);
+    // Two slightly detuned "strings" on the lowest partials give the gentle
+    // beating of a piano's string pairs.
+    const detunes = n <= 3 ? [-1.2, 1.2] : [0];
+    detunes.forEach((cents) => {
+      const osc = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      osc.type = "sine";
+      osc.frequency.value = partialFreq;
+      osc.detune.value = cents;
 
-  osc.start();
-  osc.stop(now + duration + 0.05);
+      const peak = amplitude / detunes.length;
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(peak, now + 0.004);
+      // Fast initial drop, then a long slow tail.
+      gain.gain.setTargetAtTime(peak * 0.35, now + 0.004, decay * 0.12);
+      gain.gain.setTargetAtTime(0, now + 0.15, decay);
+
+      osc.connect(gain);
+      gain.connect(noteGain);
+      osc.start(now);
+      osc.stop(now + maxDuration);
+      oscillators.push(osc);
+    });
+  });
+
+  // Hammer thump.
+  const noise = audioContext.createBufferSource();
+  noise.buffer = getNoiseBuffer();
+  const noiseFilter = audioContext.createBiquadFilter();
+  noiseFilter.type = "bandpass";
+  noiseFilter.frequency.value = Math.min(frequency * 4, 6000);
+  noiseFilter.Q.value = 1.5;
+  const noiseGain = audioContext.createGain();
+  noiseGain.gain.setValueAtTime(0.08, now);
+  noiseGain.gain.setTargetAtTime(0, now, 0.008);
+  noise.connect(noiseFilter);
+  noiseFilter.connect(noiseGain);
+  noiseGain.connect(noteGain);
+  noise.start(now);
+
+  // Damper: fade out quickly when the key is released.
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    const t = audioContext.currentTime;
+    noteGain.gain.cancelScheduledValues(t);
+    noteGain.gain.setValueAtTime(noteGain.gain.value, t);
+    noteGain.gain.setTargetAtTime(0, t, 0.12);
+    oscillators.forEach((osc) => {
+      try {
+        osc.stop(t + 1);
+      } catch (e) {}
+    });
+  };
 };
 
 const updateTransposeDisplay = () => {
@@ -134,10 +220,11 @@ const updateKeyLabels = () => {
 
 const handleKeyPress = (key) => {
   const midi = Number(key.dataset.midi) + transpose;
-  playNote(midi);
+  const stopNote = playNote(midi);
   key.classList.add("active");
 
   const release = () => {
+    stopNote();
     key.classList.remove("active");
     key.removeEventListener("pointerup", release);
     key.removeEventListener("pointerleave", release);

@@ -1,6 +1,6 @@
 {
   "name": "Transposable Piano",
-  "short_name": "Piano",
+  "short_name": "T-Piano",
   "description": "A browser-based piano keyboard with adjustable pitch transposition.",
   "id": "./",
   "start_url": "./",
