@@ -33,7 +33,7 @@ Your browser may require a user interaction before it allows audio playback. Cli
 - `index.html` — Page structure and controls
 - `styles.css` — Keyboard styling and responsive layout
 - `app.js` — Keyboard rendering, transposition, key signatures, and audio
-- `version.js` — App version shown in the footer and used for the offline cache name
+- `version.js` — App version shown in the header and used for the offline cache name
 - `manifest.webmanifest`, `sw.js`, `icons/` — App install metadata, offline service worker, and app icons
 
 ## Built with

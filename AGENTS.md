@@ -10,7 +10,7 @@ possible. Keep that working:
 
 - **Bump `APP_VERSION` in `version.js` with every change to app files**
   (HTML, CSS, JS, manifest, icons). That one value drives the service worker
-  cache name (`piano-v<N>`) and the "Version N" footer. The footer is how the
+  cache name (`piano-v<N>`) and the "vN" in the page header. The header is how the
   owner checks which version a device is running. Do not hard-code the version
   anywhere else.
 - **Add new app files to `ASSETS` in `sw.js`** so they work offline.

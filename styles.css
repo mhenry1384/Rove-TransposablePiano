@@ -293,11 +293,18 @@ body {
   transition: none;
 }
 
+.title {
+  margin: 0 0 -0.75rem;
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
 .version {
-  text-align: left;
-  font-size: 0.8rem;
-  opacity: 0.55;
-  letter-spacing: 0.04em;
+  font-size: 0.9rem;
+  font-weight: normal;
+  opacity: 0.6;
 }
 
 @media (max-width: 900px) {
@@ -325,6 +332,11 @@ body {
   body {
     padding-top: 0;
     padding-bottom: 0;
+  }
+
+  .title {
+    margin: 0.25rem 0 -1.25rem;
+    font-size: 1.1rem;
   }
 
   .controls {

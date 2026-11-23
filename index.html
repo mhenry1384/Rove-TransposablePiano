@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Transposable Piano</title>
+    <title>Rove Transposable Piano</title>
     <meta name="theme-color" content="#0f172a" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -16,6 +16,9 @@
   </head>
   <body>
     <main class="app">
+      <h1 class="title">
+        Rove Transposable Piano <span class="version">v<span id="app-version"></span></span>
+      </h1>
       <header class="controls">
         <div class="transpose-controls">
           <button id="transpose-down" class="arrow" aria-label="Transpose down">
@@ -58,8 +61,6 @@
         <div class="overview-keys" id="overview-keys"></div>
         <div class="overview-window" id="overview-window"></div>
       </div>
-
-      <footer class="version">Version <span id="app-version"></span></footer>
     </main>
 
     <script src="version.js"></script>
